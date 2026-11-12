@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMM Panel API: spec, conformance tester, mock server</title>
+<meta name="description" content="The SMM panel API written down: eight actions, three read-only probes, a conformance tester that answers whether a panel actually implements it.">
+<link rel="canonical" href="https://relaystack.github.io/smm-panel-spec/">
+<meta name="theme-color" content="#14161a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SMM Panel API — does this panel actually implement it?">
+<meta property="og:description" content="Eight actions, three read-only probes, one command. The de-facto SMM panel API, written down and made testable.">
+<meta property="og:url" content="https://relaystack.github.io/smm-panel-spec/">
+<meta name="twitter:card" content="summary">
+<link rel="preload" href="fonts/barlow-semi-condensed-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "SMM Panel API conformance",
+  "description": "Specification, read-only conformance tester and mock server for the SMM panel API (v1 and v2).",
+  "codeRepository": "https://github.com/RelayStack/smm-panel-spec",
+  "programmingLanguage": ["Python", "PHP", "JavaScript"],
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#board">Skip to the board</a>
+
+<header class="rail">
+  <a class="wordmark" href="./">SMMCHECK</a>
+  <nav class="rail__nav" aria-label="Sections">
+    <a href="#board">Actions</a>
+    <a href="#breaks">Conventions</a>
+    <a href="#run">Run it</a>
+    <a href="https://github.com/RelayStack/smm-panel-spec">Repository</a>
+  </nav>
+</header>
+
+<main>
+  <div class="intro">
+    <h1>Does this panel actually implement the&nbsp;API?</h1>
+    <p class="intro__lede">
+      Every panel speaks the same eight-action API and nobody published it, so every integration
+      guesses. Three of these rows can be proven in the next ten seconds, read-only: no order
+      placed, no balance spent.
+    </p>
+  </div>
+
+  <section class="board" id="board" aria-labelledby="board-caption">
+    <h2 class="visually-hidden" id="board-caption">Conformance board</h2>
+
+    <div class="board__head">
+      <p class="board__dest">api &middot; v1 / v2</p>
+      <p class="board__clock" aria-live="off"><span id="clock">--:--:--</span></p>
+      <p class="board__mode">read-only</p>
+    </div>
+
+    <table class="b">
+      <caption class="visually-hidden">The eight API actions, their probe status and latency, and what each returns</caption>
+      <colgroup>
+        <col class="b__c1"><col class="b__c2"><col class="b__c3"><col class="b__c4">
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">Action</th>
+          <th scope="col">Status</th>
+          <th scope="col">Latency</th>
+          <th scope="col">Returns</th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr class="b__row" data-action="services" data-probed="1">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-services">
+              <span class="b__name">services</span>
+              <span class="b__hint">no params</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="idle">ready</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">array of services</td>
+        </tr>
+        <tr class="b__detail" id="d-services" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request</p>
+              <pre><code>GET /api/v1?key=YOUR_KEY&amp;action=services</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>[
+  { "service": "5", "name": "Instagram Followers [15K]", "category": "Instagram",
+    "rate": "1.02", "min": "500", "max": "10000", "type": "default", "dripfeed": 1 }
+]</code></pre>
+              <p class="d__note">An empty array is valid. A JSON object here means the request failed
+                and you were handed an error envelope instead.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="b__row" data-action="balance" data-probed="1">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-balance">
+              <span class="b__name">balance</span>
+              <span class="b__hint">no params</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="idle">ready</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">balance, currency</td>
+        </tr>
+        <tr class="b__detail" id="d-balance" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request</p>
+              <pre><code>GET /api/v1?key=YOUR_KEY&amp;action=balance</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "status": "success", "balance": "24.56", "currency": "USD" }</code></pre>
+              <p class="d__note">The balance arrives as a string on some panels and a number on
+                others. Parse to a decimal; a float loses cents across a thousand orders.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="b__row" data-action="status" data-probed="1">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-status">
+              <span class="b__name">status</span>
+              <span class="b__hint">order | orders</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="idle">ready</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">status, charge, remains</td>
+        </tr>
+        <tr class="b__detail" id="d-status" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request &mdash; single</p>
+              <pre><code>GET /api/v1?key=YOUR_KEY&amp;action=status&amp;order=32</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "order": "32", "status": "inprogress", "charge": "1.2600",
+  "start_count": "0", "remains": "0" }</code></pre>
+              <p class="d__label">Request &mdash; several</p>
+              <pre><code>GET /api/v1?key=YOUR_KEY&amp;action=status&amp;orders=12,2</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "12": { "order": "12", "status": "processing" },
+  "2":  "Incorrect order ID" }</code></pre>
+              <p class="d__note">In the multi form a failed order is a bare string, not an object
+                with an error field. This is the shape most clients get wrong. The probe asks for
+                an order id that cannot exist and checks that this envelope comes back at all.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="b__row" data-action="add" data-probed="0">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-add">
+              <span class="b__name">add</span>
+              <span class="b__hint">service, link, quantity</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="off">not probed</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">order id</td>
+        </tr>
+        <tr class="b__detail" id="d-add" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request</p>
+              <pre><code>POST /api/v1
+key=YOUR_KEY&amp;action=add&amp;service=5&amp;link=https://instagram.com/p/x&amp;quantity=1000</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "status": "success", "order": 32 }</code></pre>
+              <p class="d__note">Not probed, because it spends money and changes state. Success means
+                the order was accepted and the balance debited &mdash; not that anything was
+                delivered. Poll <code>status</code> for that.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="b__row" data-action="orders" data-probed="0">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-orders">
+              <span class="b__name">orders</span>
+              <span class="b__hint">v2 &middot; limit, offset</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="off" data-v2>v2 only</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">order history</td>
+        </tr>
+        <tr class="b__detail" id="d-orders" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request</p>
+              <pre><code>GET /api/v2?key=YOUR_KEY&amp;action=orders&amp;limit=100&amp;offset=0</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "status": "success",
+  "orders": [ { "order": 32, "service_id": 5, "service": "Instagram Followers",
+                "link": "https://...", "quantity": 1000, "charge": "1.02",
+                "status": "completed", "created_at": "2026-01-01T00:00:00Z" } ] }</code></pre>
+              <p class="d__note">Pagination is not standardised. Treat the result as a page, not as
+                the complete history, and do not infer a total from its length.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="b__row" data-action="cancel" data-probed="0">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-cancel">
+              <span class="b__name">cancel</span>
+              <span class="b__hint">v2 &middot; orders</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="off" data-v2>v2 only</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">count cancelled</td>
+        </tr>
+        <tr class="b__detail" id="d-cancel" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request</p>
+              <pre><code>GET /api/v2?key=YOUR_KEY&amp;action=cancel&amp;orders=12,2</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "status": "success", "cancel": 1 }</code></pre>
+              <p class="d__note">&ldquo;0&rdquo; is a valid and common answer: a completed order
+                cannot be cancelled. Treat it as success, not as a failure.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="b__row" data-action="refill" data-probed="0">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-refill">
+              <span class="b__name">refill</span>
+              <span class="b__hint">v2 &middot; order</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="off" data-v2>v2 only</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">refill id</td>
+        </tr>
+        <tr class="b__detail" id="d-refill" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request</p>
+              <pre><code>GET /api/v2?key=YOUR_KEY&amp;action=refill&amp;order=32</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "status": "success", "refill": 7 }</code></pre>
+              <p class="d__note">The value is a refill id, not a boolean. Keep it: that is what
+                <code>refill_status</code> takes.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="b__row" data-action="refill_status" data-probed="0">
+          <th scope="row">
+            <button class="b__toggle" aria-expanded="false" aria-controls="d-refill-status">
+              <span class="b__name">refill_status</span>
+              <span class="b__hint">v2 &middot; refill</span>
+            </button>
+          </th>
+          <td class="b__status"><span class="flap" data-state="off" data-v2>v2 only</span></td>
+          <td class="b__lat"><span class="num">&mdash;</span></td>
+          <td class="b__note">refill state</td>
+        </tr>
+        <tr class="b__detail" id="d-refill-status" hidden>
+          <td colspan="4">
+            <div class="d">
+              <p class="d__label">Request</p>
+              <pre><code>GET /api/v2?key=YOUR_KEY&amp;action=refill_status&amp;refill=7</code></pre>
+              <p class="d__label">Response</p>
+              <pre><code>{ "status": "success", "refill": "Completed" }</code></pre>
+              <p class="d__note">The refill value set is not closed either. Tolerate strings you
+                have not seen before.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="board__say" id="say" role="status" aria-live="polite">
+      Three probes are read-only; <code>add</code>, <code>cancel</code> and <code>refill</code>
+      write, so the checker never calls them. The numbers this board shows come from
+      <code>report.json</code> &mdash; a captured run against the bundled mock server.
+    </p>
+
+    <div class="board__rail">
+      <p class="board__cmd" id="cmdline"><code>python3 conformance/smmcheck.py --base https://panel.example --key $SMM_KEY</code></p>
+      <div class="board__acts">
+        <button class="copy" id="copy" type="button" data-copy="python3 conformance/smmcheck.py --base https://panel.example --key $SMM_KEY">
+          <svg viewBox="0 0 16 16" aria-hidden="true" width="16" height="16"><path d="M5.5 5.5V3a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2.5M2.5 6.5h7a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          <span>Copy</span>
+        </button>
+        <button class="runbtn" id="runbtn" type="button">Run conformance</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="breaks" id="breaks" aria-labelledby="breaks-h">
+    <h2 id="breaks-h">Three conventions break every integration</h2>
+    <ol class="breaks__list">
+      <li>
+        <h3>Business errors are HTTP 200</h3>
+        <p><code>{"error": "Incorrect order ID"}</code> is a successful HTTP response. A client that
+          treats 200 as success records orders that were never placed.</p>
+      </li>
+      <li>
+        <h3>Money is a string, except when it is not</h3>
+        <p><code>"1.02"</code> and <code>1.02</code> appear in the same field across versions and
+          panels. Parse to a decimal, never to a float.</p>
+      </li>
+      <li>
+        <h3><code>add</code> is not delivery</h3>
+        <p>A success response means the order was accepted and the balance debited. Delivery is
+          asynchronous, so poll <code>status</code> and expect <code>remains</code> to count down.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="runsec" id="run" aria-labelledby="run-h">
+    <h2 id="run-h">Run it</h2>
+    <div class="runsec__grid">
+      <div class="runsec__block">
+        <h3>One panel</h3>
+        <pre><code>python3 conformance/smmcheck.py \
+  --base https://panel.example \
+  --key $SMM_KEY</code></pre>
+        <p>Exit code 0 only when every probe passes, so it drops into CI unchanged.
+          <code>--json</code> gives the same report machine-readable.</p>
+      </div>
+      <div class="runsec__block">
+        <h3>Several panels</h3>
+        <pre><code>python3 conformance/smmcheck.py --batch panels.csv
+
+panel    result         pass  latency
+panel-a  compliant       3/3     24ms
+panel-b  NOT compliant   1/3      1ms</code></pre>
+        <p>The file is <code>name,base,key</code> per line &mdash; the choosing-a-provider case, and
+          the only mode that compares panels side by side.</p>
+      </div>
+      <div class="runsec__block">
+        <h3>In CI</h3>
+        <pre><code>- uses: RelayStack/smm-panel-spec@main
+  with:
+    base_url: ${{ secrets.PANEL_URL }}
+    api_key: ${{ secrets.PANEL_KEY }}</code></pre>
+        <p>A composite action, read-only, so a nightly run cannot cost anything beyond the requests
+          themselves.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="after" aria-labelledby="after-h">
+    <h2 id="after-h">What it does not do</h2>
+    <p>It does not judge delivery quality, price, or whether a panel honours its own refill promise.
+      It checks the format, because the format is what breaks integrations at 2am. Panels diverge
+      inside the spec too &mdash; if yours does, that divergence is the most useful thing you can
+      send back.</p>
+    <p class="after__links">
+      <a href="https://github.com/RelayStack/smm-panel-spec/blob/main/SPEC.md">Read the spec</a>
+      <a href="https://github.com/RelayStack/smm-panel-spec">Repository</a>
+      <a href="https://github.com/RelayStack/smm-panel-spec/issues">Open an issue</a>
+    </p>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>MIT licensed. No accounts, no cookies, no telemetry on this page.</p>
+  <p class="foot__stamp">spec 2.0 &middot; probes 3 of 8 actions</p>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>

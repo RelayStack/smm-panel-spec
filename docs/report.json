@@ -1,0 +1,30 @@
+{
+  "base": "http://127.0.0.1:8140",
+  "version": "v1",
+  "compliant": true,
+  "passed": 3,
+  "total": 3,
+  "probes": [
+    {
+      "action": "services",
+      "http": 200,
+      "ok": true,
+      "ms": 28,
+      "detail": "2 services, 8 fields each"
+    },
+    {
+      "action": "balance",
+      "http": 200,
+      "ok": true,
+      "ms": 1,
+      "detail": "24.56 USD"
+    },
+    {
+      "action": "status(unknown id)",
+      "http": 200,
+      "ok": true,
+      "ms": 1,
+      "detail": "error envelope present"
+    }
+  ]
+}

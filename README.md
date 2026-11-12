@@ -5,7 +5,10 @@ Every SMM panel and most reseller tools speak the same API: form-encoded POSTs t
 anyone. It exists because one panel shipped it years ago and everybody copied the
 shape.
 
-This repository is that format, written down and made testable:
+This repository is that format, written down and made testable.
+
+**Live board:** https://relaystack.github.io/smm-panel-spec/ — press *Run conformance* and watch
+the three read-only probes land.
 
 | what | file | what it is for |
 |---|---|---|
@@ -13,7 +16,8 @@ This repository is that format, written down and made testable:
 | The spec, machine-readable | [`spec/smm-panel-api.json`](spec/smm-panel-api.json) | generate clients, validate responses |
 | A conformance tester | [`conformance/smmcheck.py`](conformance/smmcheck.py) | does this panel actually implement it? |
 | A mock panel | [`mock/server.py`](mock/server.py) | build against it without a key or money |
-| A client | [`clients/python/`](clients/python/) | reference implementation, stdlib only |
+| Clients | [`clients/`](clients/) | Python, PHP and Node, all dependency-free |
+| A GitHub Action | [`action.yml`](action.yml) | run the check inside your own CI |
 
 ## Why this exists
 

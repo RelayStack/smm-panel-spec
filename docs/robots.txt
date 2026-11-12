@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# The conformance tool lives here; the normative text is in the repository.
+Sitemap: https://relaystack.github.io/smm-panel-spec/sitemap.xml

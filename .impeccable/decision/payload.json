@@ -1,0 +1,170 @@
+{
+  "title": "Choose the visual world",
+  "question": "The roll assigned The Line Test Desk. Keep it, take an alternate, or re-roll.",
+  "buildPath": { "value": "code" },
+  "steer": true,
+  "canon": true,
+  "reroll": { "registers": ["safer", "bolder"] },
+  "options": [
+    {
+      "id": "assigned",
+      "kind": "assigned",
+      "label": "The Line Test Desk",
+      "kicker": "THE ROLL",
+      "lineage": "telephone exchange line-test desks",
+      "thesis": "A panel is a line. The page is the desk where the line is proven.",
+      "palette": ["#1c1e22", "#2a2d33", "#e8e3d6", "#f0a733", "#d8443a"],
+      "materials": ["brushed steel faceplate", "lacquered engraved labels", "amber filament lamps", "waxed cotton cords"],
+      "viewport": "A riveted faceplate fills the screen: jack fields on the left under engraved labels, a cord running right to the probe lamps, results stamped into the plate.",
+      "risk": "A hardware metaphor can read as decoration unless the lamps carry real numbers.",
+      "raised": [
+        { "from": "challenger-algorave", "raise": "A visible shared clock: the three probes land on a beat you see coming, not one after another in silence." },
+        { "from": "challenger-versailles", "raise": "Axial sightlines: one axis down the whole page, each section a room revealed as you walk it." },
+        { "from": "challenger-indoor-weather", "raise": "Monochrome discipline: one accent colour, spent only where something actually lights up." },
+        { "from": "challenger-mloda-polska", "raise": "Labels ride the frame edge; sections read as clearings inside a ruled frame." },
+        { "from": "challenger-bollywood", "raise": "Scale carries hierarchy: the failing probe is drawn larger than the ones that passed." }
+      ],
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          { "label": "engraved header", "x": 0, "y": 0, "w": 12, "h": 1 },
+          { "label": "jack field: actions", "x": 0, "y": 1, "w": 5, "h": 6, "accent": true },
+          { "label": "cord + probe lamps", "x": 5, "y": 1, "w": 7, "h": 6 },
+          { "label": "run conformance", "x": 0, "y": 7, "w": 4, "h": 2, "accent": true },
+          { "label": "result strip", "x": 4, "y": 7, "w": 8, "h": 2 }
+        ]
+      }
+    },
+    {
+      "id": "model-pick",
+      "kind": "pick",
+      "label": "The Departure Board",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "airport split-flap status boards",
+      "thesis": "Every panel and every order is a row on a board that tells you where it stands.",
+      "palette": ["#14161a", "#212429", "#f2efe6", "#e9a13b"],
+      "materials": ["split-flap ribbon", "anodised rails", "enamel numerals"],
+      "viewport": "A full-bleed board of flap rows: panels on the left, status flipping in the middle, latency on the right.",
+      "risk": "Also the direction most runs in this category land on: a status table with a costume.",
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          { "label": "board masthead", "x": 0, "y": 0, "w": 12, "h": 1 },
+          { "label": "flap rows", "x": 0, "y": 1, "w": 12, "h": 8, "accent": true },
+          { "label": "run strip", "x": 0, "y": 9, "w": 12, "h": 1 }
+        ]
+      }
+    },
+    {
+      "id": "challenger-nixie",
+      "kind": "challenger",
+      "catalogId": "signals-instruments-nixie-laboratory-counter",
+      "label": "Nixie Laboratory Counter",
+      "verdict": "competitive",
+      "lineage": "nixie-tube laboratory counters",
+      "thesis": "The measurement is the page: stacked glowing digits, one bank per number.",
+      "palette": ["#101114", "#ff7a2f", "#6a7076"],
+      "materials": ["blackened steel chassis", "glass envelopes", "anode mesh"],
+      "viewport": "Three banks of glowing digits on a dark chassis, latency and pass count hovering in orange behind glass.",
+      "case": "Fuses cleanly - numbers are the product - but it identifies with instrument collectors more than with integrators.",
+      "risk": "Glow does the persuading and the actual finding gets buried.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-nixie-laboratory-counter-hero.webp",
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          { "label": "chassis header", "x": 0, "y": 0, "w": 12, "h": 1 },
+          { "label": "digit bank: latency", "x": 1, "y": 2, "w": 10, "h": 3, "accent": true },
+          { "label": "digit bank: pass count", "x": 1, "y": 5, "w": 6, "h": 2 },
+          { "label": "engraved caps", "x": 7, "y": 5, "w": 4, "h": 2 }
+        ]
+      }
+    },
+    {
+      "id": "challenger-algorave",
+      "kind": "challenger",
+      "catalogId": "medium-native-algorave-source-floor",
+      "label": "Algorave Source Floor",
+      "verdict": "declined",
+      "lineage": "live-coded algorave projection",
+      "thesis": "The source is the stage and the edit is the beat.",
+      "palette": ["#0b0f0c", "#39ff88", "#ff3ec8", "#ffb020"],
+      "materials": ["projector black", "phosphor syntax", "amber pre-flash"],
+      "viewport": "One code buffer at stage scale, the cursor line as the downbeat.",
+      "case": "Fuses badly: a spec is read alone at a desk, not performed at a hundred bodies.",
+      "kept": "A visible shared clock - results land on a beat, not in silence.",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-algorave-source-floor-hero.webp"
+    },
+    {
+      "id": "challenger-versailles",
+      "kind": "challenger",
+      "catalogId": "architecture-inhabitable-space-versailles-bosquet-vistas",
+      "label": "Versailles Bosquet Vistas",
+      "verdict": "declined",
+      "lineage": "axial garden plans and bosquet theatres",
+      "thesis": "One axis, and each turn opens a room the last one hid.",
+      "palette": ["#2f4a34", "#cbb896", "#b08d3f", "#f4f1e8"],
+      "materials": ["clipped hedge", "raked gravel", "gilt bronze", "spray white"],
+      "viewport": "A terrace axis running to a horizon, parterres mirrored either side.",
+      "case": "Fuses badly: the grandeur asserts taste where the visitor wants evidence.",
+      "kept": "Axial sightlines - one axis, sections as rooms revealed in sequence.",
+      "hero": "https://impeccable.style/worlds/cards/architecture-inhabitable-space-versailles-bosquet-vistas-hero.webp"
+    },
+    {
+      "id": "challenger-indoor-weather",
+      "kind": "challenger",
+      "catalogId": "light-shadow-caustics-indoor-weather-sun",
+      "label": "Indoor Weather Sun",
+      "verdict": "declined",
+      "lineage": "monofrequency sodium-light installations",
+      "thesis": "One colour floods everything, and the mirror doubles what you did.",
+      "palette": ["#e08a1e", "#120f0c", "#f6e3c4"],
+      "materials": ["sodium amber haze", "silhouette black", "mirror"],
+      "viewport": "A long amber horizon with a half sun completing itself in the mirrored ceiling.",
+      "case": "Fuses badly: atmosphere where the page owes a verdict.",
+      "kept": "Monochrome discipline - one accent, spent only where something lights up.",
+      "hero": "https://impeccable.style/worlds/cards/light-shadow-caustics-indoor-weather-sun-hero.webp"
+    },
+    {
+      "id": "challenger-mloda-polska",
+      "kind": "challenger",
+      "catalogId": "design-canon-mloda-polska-secession-page",
+      "label": "Mloda Polska Secession Page",
+      "verdict": "declined",
+      "lineage": "Krakow secession review pages",
+      "thesis": "Ornament grows in from the margins and leaves a clearing for the text.",
+      "palette": ["#f2ead6", "#4f6b46", "#b98a8a", "#2b3440"],
+      "materials": ["ivory stock", "flat ornament", "fine outline"],
+      "viewport": "Hand-drawn display lettering inside a border growing inward from four edges.",
+      "case": "Fuses badly: ornament competes with the number the visitor came for.",
+      "kept": "Labels ride the frame edge; sections read as clearings inside a ruled frame.",
+      "hero": "https://impeccable.style/worlds/cards/design-canon-mloda-polska-secession-page-hero.webp"
+    },
+    {
+      "id": "challenger-bollywood",
+      "kind": "challenger",
+      "catalogId": "pop-culture-shelf-bollywood-painted-poster",
+      "label": "Bombay Painted Poster",
+      "verdict": "declined",
+      "lineage": "hand-painted Bombay film hoardings",
+      "thesis": "Scale is billing: the biggest face is the biggest claim.",
+      "palette": ["#a8232c", "#e0a33a", "#221a3a", "#f6d76b"],
+      "materials": ["airbrushed sky", "chrome-yellow title", "red outline"],
+      "viewport": "One sheet montaging scenes at three scales under an airbrushed crimson sky.",
+      "case": "Fuses badly and lands on the painted-poster end the rules refuse: a picture of the world, not its website.",
+      "kept": "Scale carries hierarchy - the failing probe drawn larger than the passes.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-bollywood-painted-poster-hero.webp"
+    }
+  ],
+  "canonCard": {
+    "kind": "canon",
+    "label": "The category standard",
+    "thesis": "What this category ships, executed impeccably.",
+    "palette": ["#0f1115", "#e6e8eb", "#5b8def"],
+    "materials": ["dark dev-docs shell", "one code block", "three feature cards"],
+    "viewport": "Centred headline, subcopy, a copyable install line, three equal cards below.",
+    "risk": "Indistinguishable from the competition by design."
+  }
+}
