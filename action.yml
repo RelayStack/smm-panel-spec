@@ -1,0 +1,54 @@
+name: "SMM Panel API conformance"
+description: "Check whether an SMM panel implements the standard API. Read-only: never places an order, never spends balance."
+author: "RelayStack"
+branding:
+  icon: "check-circle"
+  color: "gray-dark"
+
+inputs:
+  base_url:
+    description: "Panel base URL, e.g. https://panel.example"
+    required: true
+  api_key:
+    description: "Panel API key. Store it as a repository secret."
+    required: true
+  version:
+    description: "API version to probe: v1 or v2"
+    required: false
+    default: "v1"
+
+outputs:
+  compliant:
+    description: "'true' when every probe passed"
+    value: ${{ steps.check.outputs.compliant }}
+  report:
+    description: "The full machine-readable report"
+    value: ${{ steps.check.outputs.report }}
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: python3 -c "import sys; sys.version_info >= (3, 8) or sys.exit('python 3.8+ required')"
+
+    - id: check
+      shell: bash
+      run: |
+        set +e
+        report=$(python3 "${{ github.action_path }}/conformance/smmcheck.py" \
+          --base "${{ inputs.base_url }}" \
+          --key "${{ inputs.api_key }}" \
+          --version "${{ inputs.version }}" \
+          --json)
+        code=$?
+        set -e
+        echo "$report"
+        echo "$report" > "$RUNNER_TEMP/smmcheck-report.json"
+        compliant=$(printf '%s' "$report" | python3 -c "import json,sys; print(str(json.load(sys.stdin)['compliant']).lower())")
+        echo "compliant=$compliant" >> "$GITHUB_OUTPUT"
+        {
+          echo "report<<SMMCHECK_EOF"
+          echo "$report"
+          echo "SMMCHECK_EOF"
+        } >> "$GITHUB_OUTPUT"
+        exit $code

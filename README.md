@@ -77,6 +77,28 @@ The third probe is the useful one: it asks for an order id that cannot exist and
 checks that the panel answers with an `{"error": ...}` envelope rather than a
 stack trace, an empty body or an HTML error page.
 
+## Compare panels
+
+Picking a provider is the same question across several panels. Feed it a file:
+
+```bash
+cat > panels.csv <<'EOF'
+# name,base,key
+panel-a,https://a.example,YOUR_KEY
+panel-b,https://b.example,YOUR_KEY
+EOF
+python3 conformance/smmcheck.py --batch panels.csv
+```
+
+```
+panel    result         pass  latency  detail
+------------------------------------------------------
+panel-a  compliant       3/3     24ms  ok
+panel-b  NOT compliant   1/3      1ms  failed: services, balance
+```
+
+Same read-only probes, same exit code.
+
 ## Build against the mock
 
 ```bash
@@ -89,7 +111,16 @@ completed` on a timer. Enough to develop polling, multi-status and cancel
 handling without a real panel, a real key or real money. State resets on
 restart; nothing it does costs anything.
 
-## Client
+## Clients
+
+Three, all dependency-free, all the same shape: money stays a string, the error
+envelope throws instead of returning.
+
+| language | file | note |
+|---|---|---|
+| Python | [`clients/python/smm_panel.py`](clients/python/smm_panel.py) | `Decimal` for money |
+| PHP | [`clients/php/SmmPanel.php`](clients/php/SmmPanel.php) | cURL, no Composer needed |
+| Node 18+ | [`clients/node/smm-panel.js`](clients/node/smm-panel.js) | global `fetch`, ESM |
 
 ```python
 from smm_panel import Panel, PanelError
@@ -100,8 +131,19 @@ order = p.add(service=1, link="https://instagram.com/p/x", quantity=1000)
 print(p.status(order))                               # {'status': 'inprogress', ...}
 ```
 
-Standard library only, `Decimal` for money, raises `PanelError` on the error
-envelope instead of returning it.
+## Use it in CI
+
+The repository is a composite GitHub Action, so the check can live next to the
+integration it protects:
+
+```yaml
+- uses: RelayStack/smm-panel-spec@main
+  with:
+    base_url: ${{ secrets.PANEL_URL }}
+    api_key: ${{ secrets.PANEL_KEY }}
+```
+
+Read-only, so a nightly run cannot cost anything beyond the requests themselves.
 
 ## Which panels implement this
 

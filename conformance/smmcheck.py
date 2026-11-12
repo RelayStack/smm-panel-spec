@@ -70,23 +70,17 @@ def check_balance(body):
 CHECKS = {"services": check_services, "balance": check_balance}
 
 
-def main():
-    ap = argparse.ArgumentParser(description="Check an SMM panel against the documented API.")
-    ap.add_argument("--base", required=True, help="panel base URL, e.g. https://panel.example")
-    ap.add_argument("--key", required=True, help="your API key")
-    ap.add_argument("--version", default="v1", choices=["v1", "v2"])
-    ap.add_argument("--json", action="store_true", help="machine-readable output")
-    a = ap.parse_args()
-
+def probe_all(base, version, key):
+    """Run every read-only probe. Shared by the single-panel and batch modes."""
     results = []
     for action in PROBES:
-        code, body, ms = call(a.base, a.version, a.key, action)
+        code, body, ms = call(base, version, key, action)
         ok, detail = CHECKS[action](body) if code == 200 else (False, f"HTTP {code}")
         results.append({"action": action, "http": code, "ok": ok, "ms": round(ms),
                         "detail": detail})
 
     # The error envelope is part of the contract, so probe it explicitly.
-    code, body, ms = call(a.base, a.version, a.key, "status", order="999999999999")
+    code, body, ms = call(base, version, key, "status", order="999999999999")
     try:
         env = json.loads(body)
         envelope_ok = isinstance(env, dict) and ("error" in env or "status" in env)
@@ -95,6 +89,56 @@ def main():
     results.append({"action": "status(unknown id)", "http": code, "ok": envelope_ok,
                     "ms": round(ms),
                     "detail": "error envelope present" if envelope_ok else "no {\"error\": ...} envelope"})
+    return results
+
+
+def run_batch(path, version):
+    """Compare panels from a `name,base,key` file - the choosing-a-provider case."""
+    rows = []
+    for raw in open(path, encoding="utf-8"):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) < 3:
+            rows.append({"name": parts[0], "ok": False, "detail": "malformed line"})
+            continue
+        name, base, key = parts[0], parts[1], ",".join(parts[2:])
+        res = probe_all(base, version, key)
+        passed = sum(1 for r in res if r["ok"])
+        worst = max(r["ms"] for r in res)
+        failed = [r["action"] for r in res if not r["ok"]]
+        rows.append({"name": name, "passed": passed, "total": len(res),
+                     "ok": passed == len(res), "worst_ms": worst,
+                     "detail": "ok" if not failed else "failed: " + ", ".join(failed)})
+    w = max((len(r["name"]) for r in rows), default=4)
+    print(f"\n{'panel':{w}}  result      pass  latency  detail")
+    print("-" * (w + 42))
+    for r in rows:
+        mark = "compliant" if r["ok"] else "NOT compliant"
+        latency = f"{r.get('worst_ms', 0)}ms"
+        print(f"{r['name']:{w}}  {mark:12s}  {r.get('passed', 0)}/{r.get('total', 3)}  "
+              f"{latency:>7s}  {r['detail']}")
+    print()
+    return 0 if all(r["ok"] for r in rows) else 1
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Check an SMM panel against the documented API.")
+    ap.add_argument("--base", help="panel base URL, e.g. https://panel.example")
+    ap.add_argument("--key", help="your API key")
+    ap.add_argument("--version", default="v1", choices=["v1", "v2"])
+    ap.add_argument("--json", action="store_true", help="machine-readable output")
+    ap.add_argument("--batch", metavar="FILE",
+                    help="compare panels from a file of name,base,key lines")
+    a = ap.parse_args()
+
+    if a.batch:
+        return run_batch(a.batch, a.version)
+    if not a.base or not a.key:
+        ap.error("--base and --key are required unless --batch is used")
+
+    results = probe_all(a.base, a.version, a.key)
 
     passed = sum(1 for r in results if r["ok"])
     verdict = passed == len(results)

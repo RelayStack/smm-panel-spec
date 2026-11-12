@@ -58,7 +58,9 @@ def handle(params):
             out = {}
             for one in str(params["orders"]).split(","):
                 one = one.strip()
-                out[one] = dict(ORDERS.get(int(one), {})) or {"error": "Incorrect order ID"}
+                o = ORDERS.get(int(one)) if one.isdigit() else None
+                # Per SPEC §5.3 the multi form maps a failure to a bare string.
+                out[one] = dict(o) if o else "Incorrect order ID"
             return 200, out
         o = ORDERS.get(int(params.get("order", 0)))
         return 200, dict(o) if o else {"error": "Incorrect order ID"}
