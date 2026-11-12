@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # No dependencies on purpose: the spec must be testable from a bare python.
+      - name: Spec is valid JSON
+        run: python -c "import json;json.load(open('spec/smm-panel-api.json'));print('spec ok')"
+
+      - name: Conformance self-test (mock passes, broken panel fails)
+        run: python tests/test_conformance.py

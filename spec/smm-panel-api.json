@@ -1,0 +1,124 @@
+{
+  "name": "SMM Panel API",
+  "version": "2.0",
+  "status": "de-facto",
+  "description": "The form-encoded, action-based API that SMM panels and reseller tools speak. This file is the normative machine-readable form of SPEC.md.",
+  "transport": {
+    "methods": ["GET", "POST"],
+    "encoding": "application/x-www-form-urlencoded",
+    "response": "application/json",
+    "baseUrls": { "v1": "/api/v1", "v2": "/api/v2" }
+  },
+  "auth": {
+    "param": "key",
+    "in": ["query", "body"],
+    "required": true,
+    "notes": "The key selects the account whose balance is charged. Panel-specific."
+  },
+  "conventions": {
+    "numbers": "Decimal amounts and counters are serialised as strings in v1 and may be numbers in v2; clients must accept both.",
+    "businessErrors": "HTTP 200 with {\"error\": \"<message>\"}. Only rate limiting uses a non-200 status.",
+    "ordering": "add is synchronous about debiting and asynchronous about delivery: a success response means the order exists, not that it is complete."
+  },
+  "actions": {
+    "services": {
+      "versions": ["v1", "v2"],
+      "params": {},
+      "readOnly": true,
+      "response": {
+        "type": "array",
+        "item": {
+          "service": "string|number",
+          "name": "string",
+          "category": "string",
+          "rate": "string|number",
+          "min": "string|number",
+          "max": "string|number",
+          "type": "string",
+          "dripfeed": "number?"
+        }
+      }
+    },
+    "add": {
+      "versions": ["v1", "v2"],
+      "params": {
+        "service": { "type": "string|number", "required": true },
+        "link": { "type": "string", "required": true },
+        "quantity": { "type": "string|number", "required": true },
+        "runs": { "type": "string|number", "required": false, "notes": "drip-feed only" },
+        "interval": { "type": "string|number", "required": false, "notes": "drip-feed only" }
+      },
+      "response": { "status": "\"success\"", "order": "number" }
+    },
+    "status": {
+      "versions": ["v1", "v2"],
+      "params": {
+        "order": { "type": "string|number", "required": false },
+        "orders": { "type": "string", "required": false, "notes": "comma-separated; multi-status form" }
+      },
+      "response": {
+        "single": {
+          "order": "string|number",
+          "status": "string",
+          "charge": "string|number",
+          "start_count": "string|number",
+          "remains": "string|number",
+          "currency": "string?"
+        },
+        "multi": { "type": "object", "keys": "order id -> object | {\"error\": string}" }
+      },
+      "statusValues": ["pending", "inprogress", "processing", "completed", "partial", "canceled", "cancelled"]
+    },
+    "balance": {
+      "versions": ["v1", "v2"],
+      "params": {},
+      "readOnly": true,
+      "response": { "status": "\"success\"?", "balance": "string|number", "currency": "string" }
+    },
+    "orders": {
+      "versions": ["v2"],
+      "params": { "limit": "string|number?", "offset": "string|number?", "status": "string?" },
+      "readOnly": true,
+      "response": {
+        "status": "\"success\"",
+        "orders": [
+          {
+            "order": "number",
+            "service_id": "number?",
+            "service": "string?",
+            "link": "string",
+            "quantity": "number",
+            "charge": "string|number",
+            "status": "string",
+            "created_at": "string?"
+          }
+        ]
+      }
+    },
+    "cancel": {
+      "versions": ["v2"],
+      "params": { "orders": { "type": "string", "required": true } },
+      "response": { "status": "\"success\"", "cancel": "number" },
+      "notes": "Returns how many orders were queued for cancellation; 0 is a valid answer."
+    },
+    "refill": {
+      "versions": ["v2"],
+      "params": { "order": { "type": "string|number", "required": true } },
+      "response": { "status": "\"success\"", "refill": "number" }
+    },
+    "refill_status": {
+      "versions": ["v2"],
+      "params": { "refill": { "type": "string|number", "required": true } },
+      "readOnly": true,
+      "response": { "status": "\"success\"", "refill": "string|number" }
+    }
+  },
+  "errorCodes": {
+    "http200": ["Incorrect order ID", "Insufficient balance", "Incorrect service ID", "Invalid link", "Not enough quantity"],
+    "http429": ["Too many requests"]
+  },
+  "limits": {
+    "requestsPerMinutePerKey": 30,
+    "requestsPerMinutePerIp": 60
+  }
+}
